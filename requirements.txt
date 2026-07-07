@@ -6,3 +6,9 @@ seaborn
 wordcloud
 networkx
 textblob
+fastapi
+uvicorn
+streamlit
+gensim
+plotly
+requests
