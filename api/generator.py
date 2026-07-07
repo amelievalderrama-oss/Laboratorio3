@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from singleton import AppState
 from src.ngram_model import NGramModel
 
-router = APIRouter(prefix="/generator", tags=["generator"])
+router = APIRouter()
 
 def _estado_listo():
     estado = AppState()

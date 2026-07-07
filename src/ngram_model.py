@@ -85,6 +85,14 @@ class NGramModel:
                 del vocabulario si el contexto nunca fue visto (backoff simple).
         """
         contador = self.conteos.get(contexto)
+        if not contador and self.contexto_size > 0:
+            ultima = contexto[-1]
+            agregado = Counter()
+            for ctx, cnt in self.conteos.items():
+                if ctx[-1] == ultima:
+                    agregado.update(cnt)
+            if agregado:
+                contador = agregado
         if not contador:
             return random.choice(list(self.vocabulario)) if self.vocabulario else END
         palabras = list(contador.keys())

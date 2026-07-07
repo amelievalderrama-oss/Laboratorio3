@@ -238,7 +238,7 @@ with tab_viz:
 
 # -------- generador de versículos ------------
 with tab_gen:
-    st.header("Generador de versículos falsos")
+    st.header("Generador de versículos")
     st.caption(
         "Genera texto bíblico usando n-gramas. "
     )
