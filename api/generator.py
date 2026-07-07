@@ -39,16 +39,11 @@ NOMBRES_MODELO = {
 @router.get("/models")
 def listar_modelos():
     estado = _estado_listo()
-    return {
-        "modelos": [
-            {
-                "n": n,
-                "nombre": NOMBRES_MODELO.get(n, f"{n}-gram"),
-                "vocabulario_size": len(modelo.vocabulario),
-            }
-            for n, modelo in sorted(estado.ngram_models.items())
-        ]
-    }
+    return [
+        {"nombre": nombre, "n": n, "clave": clave}
+        for clave, n in [("unigram",1),("bigram",2),("trigram",3),("ngram4",4)]
+        for nombre in [NOMBRES_MODELO[n]]
+    ]
 
 @router.get("/generate")
 def generar(
