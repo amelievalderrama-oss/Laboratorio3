@@ -4,7 +4,7 @@ from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from api.singleton import AppState
+from singleton import AppState
 from src.ngram_model import NGramModel
 
 router = APIRouter(prefix="/generator", tags=["generator"])

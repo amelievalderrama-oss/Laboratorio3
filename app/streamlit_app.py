@@ -7,7 +7,7 @@ PARA HACERLO CORRER:
     (la API DEBE CORRER en http://localhost:8000)
     $ streamlit run app/streamlit_app.py
 """
-
+import os
 import requests
 import pandas as pd
 import plotly.express as px
@@ -15,7 +15,7 @@ import streamlit as st
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
-DEFAULT_API_URL = os.getenv("API_URL","http//127.0.0.1:8000")
+DEFAULT_API_URL = os.getenv("API_URL","http://127.0.0.1:8000")
 
 def get(endpoint, params=None):
     """GET a la API. Devuelve el JSON o muestra un error."""
@@ -60,7 +60,7 @@ tab_dashboard, tab_search, tab_viz, tab_gen = st.tabs([
 with tab_dashboard:
     st.header("Dashboard del corpus")
 
-    # Filtros — se obtienen de la API para no hardcodear nada
+    # filtros
     filters = get("/dashboard/filters")
     if filters is None:
         st.stop()
@@ -89,14 +89,19 @@ with tab_dashboard:
         else:
             st.selectbox("Capítulo", ["(selecciona un libro primero)"], disabled=True)
 
+    if testament == "(todos)":
+        testament = None
+    if book =="(todos)":
+        book = None
     params = {
-        "testament": testament if testament != "(todos)" else None,
+        "testament": testament,
         "book": book if book != "(todos)" else None,
         "chapter": chapter,
     }
+    
     params = {k: v for k, v in params.items() if v is not None}
 
-    # Estadísticas
+    # estadística
     st.subheader("Versículos y longitud promedio por libro")
     stats = get("/dashboard/stats", params=params)
     if stats:
@@ -123,7 +128,7 @@ with tab_dashboard:
             fig2.update_layout(xaxis_tickangle=-45)
             st.plotly_chart(fig2, use_container_width=True)
 
-    # Top palabras
+    # ranking de palabras
     st.subheader("Palabras más frecuentes")
     n_words = st.slider("Cantidad de palabras", 5, 50, 20, key="dash_nwords")
     top = get("/dashboard/top-words", params={**params, "n": n_words})
@@ -139,7 +144,7 @@ with tab_dashboard:
         fig3.update_layout(yaxis={"categoryorder": "total ascending"})
         st.plotly_chart(fig3, use_container_width=True)
 
-    # Nube de palabras
+    # nube de palabras
     st.subheader("Nube de palabras")
     wc_data = get("/dashboard/wordcloud", params={**params, "n": 150})
     if wc_data:
@@ -156,11 +161,10 @@ with tab_dashboard:
 with tab_search:
     st.header("Buscador semántico")
     st.caption(
-        "Ingresa una frase y el sistema encuentra los versículos más similares "
-        "según similitud de coseno sobre vectores TF-IDF."
+        "Ingresa una frase y el sistema encuentra los versículos más parecidos"
     )
 
-    query = st.text_input("Frase de búsqueda", placeholder="e.g. love and faith in the lord")
+    query = st.text_input("Frase de búsqueda")
     k = st.slider("Cantidad de resultados", 1, 20, 5, key="search_k")
 
     if st.button("Buscar", type="primary") and query:
@@ -236,11 +240,10 @@ with tab_viz:
 with tab_gen:
     st.header("Generador de versículos falsos")
     st.caption(
-        "Genera texto usando modelos estadísticos de lenguaje basados en n-gramas. "
-        "Cada modelo usa las n-1 palabras anteriores como contexto."
+        "Genera texto bíblico usando n-gramas. "
     )
 
-    modelos_info = get("/generator/modelos")
+    modelos_info = get("/generator/models")
     if modelos_info:
         opciones = {m["nombre"]: m["clave"] for m in modelos_info}
 
@@ -254,7 +257,6 @@ with tab_gen:
         with col_g2:
             palabra_inicial = st.text_input(
                 "Palabra inicial (opcional)",
-                placeholder="e.g. god",
                 key="gen_word",
             )
         with col_g3:
@@ -267,10 +269,10 @@ with tab_gen:
                 "max_len": max_len,
             })
             if resultado:
-                st.markdown("### Versículo generado")
-                st.info(f"*{resultado['texto']}*")
+                st.markdown("Versículo generado")
+                st.info(f"{resultado['texto']}")
                 st.caption(
-                    f"Modelo: **{resultado['modelo']}** (n={resultado['n']}) · "
+                    f"Modelo: {resultado['modelo']} (n={resultado['n']}) · "
                     f"Largo máximo: {resultado['max_len']} · "
                     f"Palabra inicial: {resultado['palabra_inicial'] or '(ninguna)'}"
                 )

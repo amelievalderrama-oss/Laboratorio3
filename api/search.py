@@ -5,7 +5,7 @@ API para buscar textos en el corpus.
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from api.singleton import AppState
+from singleton import AppState
 
 router = APIRouter()
 

@@ -5,7 +5,7 @@
 """
 
 from fastapi import APIRouter, Query, HTTPException
-from api.singleton import AppState
+from singleton import AppState
 router=APIRouter()
 
 MODELOS = ("tfidf", "word2vec")
