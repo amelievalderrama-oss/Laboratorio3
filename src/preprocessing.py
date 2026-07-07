@@ -19,7 +19,7 @@ class TextPreprocessor:
         remove_stopwords: bool = True
     ):
         
-        self.stopwords = set(stopwords)
+        self.stopwords = set(stopwords) if stopwords else set()
         self.min_token_len = min_token_len
         self.lowercase = lowercase
         self.remove_punctuation = remove_punctuation

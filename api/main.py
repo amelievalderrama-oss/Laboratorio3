@@ -34,6 +34,4 @@ def startup():
 
 @app.get("/")
 def estado_app():
-    return {
-        "estado": "API funcionando!"
-    }
+    return {"estado": "API funcionando!"}
