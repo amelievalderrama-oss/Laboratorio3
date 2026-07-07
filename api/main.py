@@ -1,8 +1,7 @@
 from fastapi import FastAPI, Query, HTTPException
 from pathlib import Path
 
-
-import dashboard,generator,pca,search,singleton
+from . import dashboard, generator, pca, search, singleton
 
 # Rutas del dataset
 DIR_DATA = Path(__file__).resolve().parent.parent / "data"

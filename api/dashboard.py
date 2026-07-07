@@ -9,7 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Query
 
-from singleton import AppState
+from .singleton import AppState
 
 router = APIRouter()
 

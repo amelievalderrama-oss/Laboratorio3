@@ -2,12 +2,19 @@
 from typing import Optional, List
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from singleton import AppState
+from .singleton import AppState
 from src.ngram_model import NGramModel
 
 router = APIRouter()
+
+
+class GenerateRequest(BaseModel):
+    modelo: str = Field(..., description="Modelo a usar: unigram, bigram, trigram o ngram4")
+    palabra_inicial: Optional[str] = Field(None, description="Palabra inicial opcional")
+    max_len: int = Field(..., ge=1, le=100, description="Largo máximo del texto generado")
+
 
 def _estado_listo():
     estado = AppState()
@@ -45,41 +52,66 @@ def listar_modelos():
         for nombre in [NOMBRES_MODELO[n]]
     ]
 
+def _mapear_modelo(modelo: str) -> int:
+    mapa = {
+        "unigram": 1,
+        "bigram": 2,
+        "trigram": 3,
+        "ngram4": 4,
+    }
+    if modelo not in mapa:
+        raise HTTPException(400, "Modelo no válido")
+    return mapa[modelo]
+
+
+def _generar_texto(n: int, palabra_inicial: Optional[str], max_len: int):
+    estado = _estado_listo()
+
+    if n < 1:
+        raise HTTPException(400, "Ingresa un número mayor o igual a 1")
+
+    if n > 10:
+        raise HTTPException(400, "Ingresa un número menor o igual a 10")
+
+    if max_len < 1:
+        raise HTTPException(400, "Ingresa un largo mayor o igual a 1")
+
+    if max_len > 100:
+        raise HTTPException(400, "Ingresa un largo menor o igual a 100")
+
+    modelo = _obtener_modelo(estado, n)
+
+    if palabra_inicial is not None:
+        palabra = palabra_inicial.strip().lower()
+        if palabra == "":
+            raise HTTPException(400, "No hay palabra ingresada")
+        if palabra not in modelo.vocabulario:
+            raise HTTPException(400, "La palabra no está en el vocabulario")
+        texto = modelo.generar(palabra_inicial=palabra, max_len=max_len)
+    else:
+        texto = modelo.generar(palabra_inicial=None, max_len=max_len)
+
+    return {
+        "texto": texto,
+        "texto_generado": texto,
+        "modelo": NOMBRES_MODELO.get(n, f"{n}-gram"),
+        "n": n,
+        "palabra_inicial": palabra.lower() if palabra_inicial is not None and palabra_inicial.strip() != "" else None,
+        "max_len": max_len,
+    }
+
+
 @router.get("/generate")
 def generar(
     n: int,
-    palabra_inicial: str,
+    palabra_inicial: str = Query("", description="Palabra inicial opcional"),
     max_len: int = Query(...),
 ):
-    estado = _estado_listo()
+    return _generar_texto(n, palabra_inicial or None, max_len)
 
-    if (palabra_inicial.strip() == ""):
-        raise HTTPException(400, "No hay palabra ingresada")
-    
-    if n < 1:
-        raise HTTPException(400, "Ingresa un número mayor o igual a 1")
-    
-    if n > 10:
-        raise HTTPException(400, "Ingresa un número menor o igual a 10")
-    
-    if max_len < 1:
-        raise HTTPException(400, "Ingresa un largo mayor o igual a 1")
-    
-    if max_len > 100:
-        raise HTTPException(400, "Ingresa un largo menor o igual a 100")
-    
-    modelo = _obtener_modelo(estado, n)
 
-    palabra = palabra_inicial.strip().lower()
-
-    if (palabra not in modelo.vocabulario):
-        raise HTTPException(400, "La palabra no está en el vocabulario")
-    
-    texto = modelo.generar(palabra_inicial=palabra, max_len=max_len)
-    return {
-        "n": n,
-        "nombre": NOMBRES_MODELO.get(n, f"{n}-gram"),
-        "palabra_inicial": palabra,
-        "max_len": max_len,
-        "texto_generado": texto,
-    }
+@router.post("")
+@router.post("/generate")
+def generar_desde_body(req: GenerateRequest):
+    n = _mapear_modelo(req.modelo)
+    return _generar_texto(n, req.palabra_inicial, req.max_len)
