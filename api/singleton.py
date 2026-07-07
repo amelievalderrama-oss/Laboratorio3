@@ -6,6 +6,7 @@ carga el corpus y entrenan los modelos. Al usarse un patrón singleton, todo se
 realiza una única vez y se retorna siempre lo mismo.
 """
 
+import json
 import sys
 from pathlib import Path
 import numpy as np
@@ -87,7 +88,7 @@ class AppState:
         """
         return self._inicializado
 
-    def cargar(self, path_bible, path_key, path_genre):
+    def cargar(self, path_bible, path_key, path_genre, path_stopwords=None):
         """
         Carga el corpus y entrena los modelos.
 
@@ -95,12 +96,18 @@ class AppState:
             path_bible (str | Path): Ruta a t_asv.csv.
             path_key (str | Path): Ruta a key_english.csv.
             path_genre (str | Path): Ruta a key_genre_english.csv.
+            path_stopwords (str | Path, optional): Ruta a stopwords.json.
         """
         if self._inicializado:
             return
 
         print("Cargando corpus...")
-        
+
+        stopwords = set()
+        if path_stopwords is not None and Path(path_stopwords).exists():
+            with open(path_stopwords) as f:
+                stopwords = set(json.load(f))
+
         df_raw = cargar_dataset(path_bible, path_key, path_genre)
 
         self.biblia = Biblia.from_dataframe(
@@ -118,13 +125,13 @@ class AppState:
               f"{self.df['libro'].nunique()} libros")
 
         print("Preprocesando texto...")
-        self.preprocessor = TextPreprocessor()
+        self.preprocessor = TextPreprocessor(stopwords=stopwords)
         self.df["texto_procesado"] = self.preprocessor.process_corpus(
             self.df["texto_original"].tolist()
         )
         self.df["texto_limpio"] = self.df["texto_procesado"].apply(" ".join)
-    
-        self.preprocessor_ngram = TextPreprocessor(remove_stopwords=False)
+
+        self.preprocessor_ngram = TextPreprocessor(stopwords=stopwords, remove_stopwords=False)
         tokens_ngram = self.preprocessor_ngram.process_corpus(
             self.df["texto_original"].tolist()
         )

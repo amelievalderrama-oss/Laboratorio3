@@ -9,6 +9,7 @@ DIR_DATA = Path(__file__).resolve().parent.parent / "data"
 PATH_BIBLE = DIR_DATA / "t_asv.csv"
 PATH_KEY = DIR_DATA / "key_english.csv"
 PATH_GENRE = DIR_DATA / "key_genre_english.csv"
+PATH_STOPWORDS = DIR_DATA / "stopwords.json"
 
 
 app = FastAPI(
@@ -30,7 +31,7 @@ def startup():
     Deja todo preparado antes del primer request
     """
     estado = singleton.AppState()
-    estado.cargar(PATH_BIBLE, PATH_KEY, PATH_GENRE)
+    estado.cargar(PATH_BIBLE, PATH_KEY, PATH_GENRE, PATH_STOPWORDS)
 
 @app.get("/")
 def estado_app():
