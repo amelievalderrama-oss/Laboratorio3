@@ -1,14 +1,26 @@
-from fastAPI import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException
+from pathlib import Path
 
 
+from api import dashboard,generator,pca,search,singleton
 
-
-from api import dashboard,generator,pca,search
+# Rutas del dataset
+DIR_DATA = Path(__file__).resolve().parent.parent / "data"
+PATH_BIBLE = DIR_DATA / "t_asv.csv"
+PATH_KEY = DIR_DATA / "key_english.csv"
+PATH_GENRE = DIR_DATA / "key_genre_english.csv"
 
 
 app = FastAPI(
-    title = "API MAIN"
+    title="Biblical Text Mining API",
+    description="API para el análisis computacional de un corpus bíblico en inglés de la American Standard Version."
 )
+
+app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+app.include_router(search.router,    prefix="/search",    tags=["Buscador"])
+app.include_router(pca.router,prefix="/visualizer",tags=["PCA y Word2Vec"])
+app.include_router(generator.router, prefix="/generator", tags=["Generador"])
+
 
 @app.on_event("startup")
 def startup():
@@ -17,7 +29,7 @@ def startup():
     Instancia el Singleton AppState y llama a cargar().
     Deja todo preparado antes del primer request
     """
-    estado = AppState()
+    estado = singleton.AppState()
     estado.cargar(PATH_BIBLE, PATH_KEY, PATH_GENRE)
 
 @app.get("/")
