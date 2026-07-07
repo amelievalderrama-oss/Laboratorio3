@@ -148,7 +148,6 @@ class AppState:
         self.motor.matriz_tfidf = self.matriz_tfidf
 
         print("Entrenando modelos de n-gramas...")
-        N_GRAMAS = (1, 2, 3, 4)
         for n in N_GRAMAS:
             self.ngram_models[n] = NGramModel(n).fit(tokens_ngram)
         print(f"N-gramas entrenados: {list(self.ngram_models.keys())}")

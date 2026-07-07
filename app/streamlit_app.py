@@ -17,12 +17,23 @@ import matplotlib.pyplot as plt
 
 DEFAULT_API_URL = os.getenv("API_URL","http://127.0.0.1:8000")
 
+def _mostrar_error(r, e):
+    try:
+        detalle = r.json().get("detail", str(e))
+    except Exception:
+        detalle = r.text or str(e)
+    st.error(detalle if isinstance(detalle, str) else str(detalle))
+
+
 def get(endpoint, params=None):
     """GET a la API. Devuelve el JSON o muestra un error."""
     try:
         r = requests.get(f"{DEFAULT_API_URL}{endpoint}", params=params, timeout=15)
         r.raise_for_status()
         return r.json()
+    except requests.HTTPError as e:
+        _mostrar_error(r, e)
+        return None
     except Exception as e:
         st.error(f"Error al conectar con la API: {e}")
         return None
@@ -34,6 +45,9 @@ def post(endpoint, body):
         r = requests.post(f"{DEFAULT_API_URL}{endpoint}", json=body, timeout=15)
         r.raise_for_status()
         return r.json()
+    except requests.HTTPError as e:
+        _mostrar_error(r, e)
+        return None
     except Exception as e:
         st.error(f"Error al conectar con la API: {e}")
         return None
@@ -45,8 +59,7 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("Biblical Text Mining — ASV Corpus")
-st.caption("Sistema de análisis computacional del corpus bíblico")
+st.title("Taller 03 - Biblical Text Mining")
 
 tab_dashboard, tab_search, tab_viz, tab_gen = st.tabs([
     "Dashboard",
@@ -165,22 +178,26 @@ with tab_search:
     )
 
     query = st.text_input("Frase de búsqueda")
-    k = st.slider("Cantidad de resultados", 1, 20, 5, key="search_k")
+    k = st.slider("Cantidad de resultados", 1, 5, 5, key="search_k")
 
     if st.button("Buscar", type="primary") and query:
-        resultados = post("/search", {"query": query, "k": k})
+        resultados = post("/search", {"query": query, "limit": k})
         if resultados:
             df_res = pd.DataFrame(resultados)
             df_res["similitud"] = df_res["similitud"].round(4)
-            st.dataframe(
-                df_res,
-                use_container_width=True,
-                column_config={
-                    "similitud": st.column_config.ProgressColumn(
-                        "Similitud", min_value=0, max_value=1, format="%.4f"
-                    )
-                },
-            )
+            df_res = df_res[df_res["similitud"] > 0]
+            if df_res.empty:
+                st.info("No hay versículos semejantes")
+            else:
+                st.dataframe(
+                    df_res,
+                    use_container_width=True,
+                    column_config={
+                        "similitud": st.column_config.ProgressColumn(
+                            "Similitud", min_value=0, max_value=1, format="%.4f"
+                        )
+                    },
+                )
 
 
 # -------- visualizador PCA y word2vec------------
@@ -216,7 +233,7 @@ with tab_viz:
                 df_viz,
                 x="x", y="y",
                 color=color_por,
-                hover_data=["libro", "capitulo", "versiculo"],
+                hover_data=["libro", "capitulo", "versiculo", "texto_original"],
                 title=f"{representacion} — {dims}D (coloreado por {color_por})",
                 labels={"x": "PC1", "y": "PC2"},
                 opacity=0.6,
@@ -226,7 +243,7 @@ with tab_viz:
                 df_viz,
                 x="x", y="y", z="z",
                 color=color_por,
-                hover_data=["libro", "capitulo", "versiculo"],
+                hover_data=["libro", "capitulo", "versiculo", "texto_original"],
                 title=f"{representacion} — {dims}D (coloreado por {color_por})",
                 labels={"x": "PC1", "y": "PC2", "z": "PC3"},
                 opacity=0.6,
@@ -245,7 +262,7 @@ with tab_gen:
 
     modelos_info = get("/generator/models")
     if modelos_info:
-        opciones = {m["nombre"]: m["clave"] for m in modelos_info}
+        opciones = {m["nombre"]: m["n"] for m in modelos_info}
 
         col_g1, col_g2, col_g3 = st.columns(3)
         with col_g1:
@@ -263,14 +280,14 @@ with tab_gen:
             max_len = st.slider("Largo máximo", 10, 60, 20, key="gen_len")
 
         if st.button("Generar", type="primary"):
-            resultado = post("/generator", {
-                "modelo": opciones[modelo_nombre],
-                "palabra_inicial": palabra_inicial if palabra_inicial else None,
+            resultado = get("/generator/generate", params={
+                "n": opciones[modelo_nombre],
+                "palabra_inicial": palabra_inicial,
                 "max_len": max_len,
             })
             if resultado:
                 st.markdown("Versículo generado")
-                st.info(f"{resultado['texto']}")
+                st.info(f"{resultado['texto_generado']}")
                 st.caption(
                     f"Modelo: {resultado['modelo']} (n={resultado['n']}) · "
                     f"Largo máximo: {resultado['max_len']} · "

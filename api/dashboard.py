@@ -7,7 +7,7 @@ Endpoints del dashboard
 from collections import Counter
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from .singleton import AppState
 
@@ -24,6 +24,8 @@ def _filtrar_df(testamento=None, libro=None, capitulo=None):
     Returns:
         pd.DataFrame: Subconjunto del corpus con los filtros aplicados.
     """
+    if capitulo is not None and not libro:
+        raise HTTPException(400, "Para filtrar por capítulo también se debe indicar un libro")
     df = AppState().df.copy()
     if testamento:
         df = df[df["testamento"] == testamento]

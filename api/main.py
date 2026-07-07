@@ -12,7 +12,7 @@ PATH_STOPWORDS = DIR_DATA / "stopwords.json"
 
 
 app = FastAPI(
-    title="Biblical Text Mining API",
+    title="Biblical Text Mining",
     description="API para el análisis computacional de un corpus bíblico en inglés de la American Standard Version."
 )
 

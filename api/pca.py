@@ -19,7 +19,7 @@ def ConstruirRespuesta(coordenadas,dims):
     Returns:    
         List[Dict]: Lista de diccionarios por versiculo con metadatos y coordenadas PCA.
     """
-    df=AppState().df[["testamento","libro","genero","capitulo","versiculo"]].copy()
+    df=AppState().df[["testamento","libro","genero","capitulo","versiculo","texto_original"]].copy()
     df["x"] = coordenadas[:, 0]
     df["y"] = coordenadas[:, 1]
     if dims == 3:

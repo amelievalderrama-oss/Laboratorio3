@@ -120,7 +120,7 @@ class NGramModel:
             contexto = tuple([START] * self.contexto_size)
             generadas = []
 
-        for _ in range(max_len):
+        while len(generadas) < max_len:
             siguiente = self.get_siguiente_palabra(contexto)
             if siguiente == END:
                 break

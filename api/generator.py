@@ -40,7 +40,6 @@ NOMBRES_MODELO = {
     2: "bigram",
     3: "trigram",
     4: "4-gram",
-    5: "5-gram",
 }
 
 @router.get("/models")
@@ -70,14 +69,14 @@ def _generar_texto(n: int, palabra_inicial: Optional[str], max_len: int):
     if n < 1:
         raise HTTPException(400, "Ingresa un número mayor o igual a 1")
 
-    if n > 10:
-        raise HTTPException(400, "Ingresa un número menor o igual a 10")
+    if n > 4:
+        raise HTTPException(400, "Ingresa un número menor o igual a 4")
 
     if max_len < 1:
         raise HTTPException(400, "Ingresa un largo mayor o igual a 1")
 
-    if max_len > 100:
-        raise HTTPException(400, "Ingresa un largo menor o igual a 100")
+    if max_len > 60:
+        raise HTTPException(400, "Ingresa un largo menor o igual a 60")
 
     modelo = _obtener_modelo(estado, n)
 
