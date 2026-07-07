@@ -19,6 +19,7 @@ from src.tfidf import TFIDFVectorizer
 from src.search_engine import SemanticSearchEngine
 from src.ngram_model import NGramModel
 
+N_GRAMAS = (1, 2, 3, 4)
 
 
 class AppState:
