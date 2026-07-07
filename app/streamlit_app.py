@@ -7,7 +7,7 @@ PARA HACERLO CORRER:
     (la API DEBE CORRER en http://localhost:8000)
     $ streamlit run app/streamlit_app.py
 """
-
+import os
 import requests
 import pandas as pd
 import plotly.express as px
@@ -15,7 +15,7 @@ import streamlit as st
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
-DEFAULT_API_URL = os.getenv("API_URL","http//127.0.0.1:8000")
+DEFAULT_API_URL = os.getenv("API_URL","http://127.0.0.1:8000")
 
 def get(endpoint, params=None):
     """GET a la API. Devuelve el JSON o muestra un error."""
@@ -234,7 +234,7 @@ with tab_viz:
 
 # -------- generador de versículos ------------
 with tab_gen:
-    st.header("Generador de versículos falsos")
+    st.header("Generador de versículos")
     st.caption(
         "Genera texto usando modelos estadísticos de lenguaje basados en n-gramas. "
         "Cada modelo usa las n-1 palabras anteriores como contexto."
