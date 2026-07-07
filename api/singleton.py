@@ -11,16 +11,14 @@ from pathlib import Path
 import numpy as np
 from sklearn.decomposition import PCA
 
-
-from src.data_loader import cargar_dataset
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.dataloader import cargar_dataset
 from src.models import Biblia
 from src.preprocessing import TextPreprocessor
 from src.tfidf import TFIDFVectorizer
 from src.search_engine import SemanticSearchEngine
 from src.ngram_model import NGramModel
-import Path().parent.main
 
-#N_GRAMAS = (1, 2, 3, 4)
 
 
 class AppState:
@@ -48,7 +46,6 @@ class AppState:
     """
 
     _instance = None
-
     def __new__(cls):
         """
         Función de control SINGLETON.
@@ -143,6 +140,7 @@ class AppState:
         self.motor.matriz_tfidf = self.matriz_tfidf
 
         print("Entrenando modelos de n-gramas...")
+        N_GRAMAS = (1, 2, 3, 4)
         for n in N_GRAMAS:
             self.ngram_models[n] = NGramModel(n).fit(tokens_ngram)
         print(f"N-gramas entrenados: {list(self.ngram_models.keys())}")
